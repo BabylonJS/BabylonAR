@@ -1,0 +1,129 @@
+<html>
+
+<head>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <style>
+        #videoElement {
+            width: 640px;
+            height: 480px;
+            background-color: #666;
+        }
+
+        #canvasElement {
+            visibility: hidden;
+        }
+
+        #renderCanvas {
+            width: 640px;
+            height: 480px;
+            touch-action: none;
+        }
+    </style>
+</head>
+
+<body>
+    <video autoplay="true" id="videoElement"></video>
+    <script>
+        if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+                document.querySelector("#videoElement").srcObject = stream;
+            })
+        }
+    </script>
+
+    <canvas id="renderCanvas"></canvas>
+    <canvas id="canvasElement"></canvas>
+
+    <script>
+        // Sphere position variables; set by image processing, read by Babylon.js
+        var x = 0;
+        var y = 0;
+        var z = 2;
+
+        // Image processing.
+        var canvas = document.querySelector("#canvasElement");
+        canvas.width = 320;
+        canvas.height = 240;
+        var context = canvas.getContext("2d");
+        function grabImage() {
+            var video = document.querySelector("#videoElement");
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            context.putImageData(imageData, 0, 0);
+
+            var buf = Module._malloc(imageData.data.length * imageData.data.BYTES_PER_ELEMENT);
+            Module.HEAPU8.set(imageData.data, buf);
+            var numMarkers = Module._process_image(canvas.width, canvas.height, buf, 1);
+            Module._free(buf);
+
+            if (numMarkers > 0) {
+                var ptr = Module._get_tracked_marker(0);
+
+                var offset = 0;
+                var id = Module.getValue(ptr + offset, "i32");
+                offset += 12;
+                var tx = Module.getValue(ptr + offset, "double");
+                offset += 8;
+                var ty = Module.getValue(ptr + offset, "double");
+                offset += 8;
+                var tz = Module.getValue(ptr + offset, "double");
+                offset += 8;
+                var rx = Module.getValue(ptr + offset, "double");
+                offset += 8;
+                var ry = Module.getValue(ptr + offset, "double");
+                offset += 8;
+                var rz = Module.getValue(ptr + offset, "double");
+
+                x = tx;
+                y = ty;
+                z = tz;
+            }
+            setTimeout(grabImage, 0);
+        }
+
+        // Launch processing on module load.
+        var Module = {
+            onRuntimeInitialized: function () {
+                Module._initialize();
+                Module._set_calibration_from_frame_size(canvas.width, canvas.height);
+
+                grabImage();
+            }
+        };
+
+        // Babylon.js canvas.
+        window.addEventListener('DOMContentLoaded', function () {
+            var canvas = document.getElementById('renderCanvas');
+            var engine = new BABYLON.Engine(canvas, true);
+            var sphere;
+            var camera;
+
+            var createScene = function () {
+                var scene = new BABYLON.Scene(engine);
+                camera = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0, 0, 0), scene);
+                camera.attachControl(canvas, false);
+                var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0, 1, 0), scene);
+                sphere = BABYLON.Mesh.CreateSphere('sphere1', 16, 2, scene);
+                return scene;
+            }
+
+            var scene = createScene();
+
+            engine.runRenderLoop(function () {
+                sphere.position.x = x;
+                sphere.position.y = -y;
+                sphere.position.z = z;
+
+                scene.render();
+            });
+
+            window.addEventListener('resize', function () {
+                engine.resize();
+            });
+        });
+    </script>
+    <script src="build/webpiled-aruco-ar.js"></script>
+</body>
+
+</html>

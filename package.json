@@ -1,0 +1,35 @@
+{
+  "name": "arucometamarkertracker",
+  "version": "1.0.0",
+  "description": "Prototype of ArUco meta marker tracker for BabylonAR.",
+  "main": "dist/arUcoMetaMarkerTracker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "aruco",
+    "babylon",
+    "ar"
+  ],
+  "author": "syntheticmagus",
+  "license": "MIT",
+  "devDependencies": {
+    "babylonjs": "^4.0.3",
+    "browserify": "^16.2.3",
+    "browserify-shim": "^3.8.14",
+    "gulp": "^4.0.0",
+    "gulp-typescript": "^5.0.1",
+    "tsify": "^4.0.1",
+    "typescript": "^3.5.2",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "babylonjs": "global:BABYLON"
+  },
+  "dependencies": {}
+}
