@@ -1,7 +1,4 @@
 {
-    "files": [
-        "src/dedicatedWorker.ts"
-    ],
     "compilerOptions": {
         "noImplicitAny": true,
         "target": "es5",

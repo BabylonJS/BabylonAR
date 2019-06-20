@@ -4,25 +4,10 @@ var exec = require("child_process").exec;
 var footer = require("gulp-footer");
 var gulp = require("gulp");
 var header = require("gulp-header");
+var rename = require("gulp-rename");
 var source = require("vinyl-source-stream");
 var tsify = require("tsify");
 var uglify = require("gulp-uglify");
-
-var playgroundProof = function (jsFile) {
-    var headerCode = 
-        "var externalDefine = window.define;" +
-        "var externalRequire = window.require;" +
-        "window.define = undefined;" +
-        "window.require = undefined;\n";
-    var footerCode = 
-        "\nwindow.define = externalDefine;" +
-        "window.require = externalRequire;\n";
-    
-    return gulp.src(jsFile)
-        .pipe(header(headerCode))
-        .pipe(footer(footerCode))
-        .pipe(gulp.dest("dist"));
-}
 
 gulp.task("exampleWorker", function () {
     return browserify({
@@ -65,7 +50,7 @@ gulp.task("webpiled-aruco-ar", function () {
     return ret;
 });
 
-gulp.task("babylonAr", gulp.series(function () {
+gulp.task("babylonAr", function () {
     return browserify({
         basedir: ".",
         debug: false,
@@ -80,17 +65,31 @@ gulp.task("babylonAr", gulp.series(function () {
     .pipe(buffer())
     .pipe(uglify())
     .pipe(gulp.dest("dist"));
-},
-function () {
-    return playgroundProof("./dist/babylonAr.js");
-}));
-
-gulp.task("deploy", function () {
-    return gulp.src(["dist/**/*"]).pipe(gulp.dest("docs"));
 });
+
+gulp.task("babylonAr.playground", gulp.series("babylonAr", function () {
+    var headerCode = 
+        "var externalDefine = window.define;" +
+        "var externalRequire = window.require;" +
+        "window.define = undefined;" +
+        "window.require = undefined;\n";
+    var footerCode = 
+        "\nwindow.define = externalDefine;" +
+        "window.require = externalRequire;\n";
+    
+    return gulp.src("dist/babylonAr.js")
+        .pipe(header(headerCode))
+        .pipe(footer(footerCode))
+        .pipe(rename("babylonAr.playground.js"))
+        .pipe(gulp.dest("dist"));
+}));
 
 gulp.task("default", gulp.parallel(
     "exampleWorker", 
     "exampleObjectTracker",
-    "babylonAr"
+    "babylonAr.playground"
 ));
+
+gulp.task("deploy", gulp.series("default", function () {
+    return gulp.src(["dist/**/*"]).pipe(gulp.dest("docs"));
+}));

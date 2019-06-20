@@ -20,6 +20,7 @@
     "gulp": "^4.0.0",
     "gulp-footer": "^2.0.2",
     "gulp-header": "^2.0.7",
+    "gulp-rename": "^1.4.0",
     "gulp-typescript": "^5.0.1",
     "gulp-uglify": "^3.0.2",
     "tsify": "^4.0.1",
