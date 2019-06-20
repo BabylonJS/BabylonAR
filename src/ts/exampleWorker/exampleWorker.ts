@@ -3,7 +3,7 @@ import { DedicatedWorker } from "../shared/dedicatedWorker"
 declare function postMessage(data: any): void;
 
 export class ExampleWorker {
-    private static readonly MODULE_URL: string = "https://syntheticmagus.github.io/webpiled-aruco-ar/v0.02/webpiled-aruco-ar/webpiled-aruco-ar.js";
+    private static readonly MODULE_URL: string = "https://syntheticmagus.github.io/prototyping/babylonar/wasm/webpiled-aruco-ar.js";
 
     private _worker: Worker;
 

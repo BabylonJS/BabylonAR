@@ -4,7 +4,7 @@ import { ExampleMarkerTracker } from "./exampleMarkerTracker"
 import { FilteredVector3 } from "../shared/filteredVector3"
 import { TrackedNode } from "../shared/trackedNode"
 
-export class ArUcoMetaMarkerObjectTracker {
+export class ExampleObjectTracker {
     private _scene: Scene;
     private _videoTexture: VideoTexture;
     private _runTrackingObserver: Nullable<Observer<Scene>> = null;
@@ -181,7 +181,7 @@ export class ArUcoMetaMarkerObjectTracker {
                         markers.forEach(marker => {
                             results[marker.id] = {
                                 position: new Vector3(marker.tx, -marker.ty, marker.tz),
-                                rotation: ArUcoMetaMarkerObjectTracker.getQuaternionFromRodrigues(marker.rx, marker.ry, marker.rz)
+                                rotation: ExampleObjectTracker.getQuaternionFromRodrigues(marker.rx, marker.ry, marker.rz)
                             }
                         });
 
@@ -200,7 +200,7 @@ export class ArUcoMetaMarkerObjectTracker {
     }
 
     static createAsync(videoTexture: VideoTexture, scene: Scene) {
-        var objectTracker = new ArUcoMetaMarkerObjectTracker(videoTexture, scene);
+        var objectTracker = new ExampleObjectTracker(videoTexture, scene);
         return ExampleMarkerTracker.createAsync().then(tracker => {
             objectTracker._tracker = tracker;
             return objectTracker.setCalibrationAsync();

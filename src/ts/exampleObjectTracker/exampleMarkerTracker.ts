@@ -6,7 +6,7 @@ declare var Module: any;
 declare function postMessage(data: any): void;
 
 export class ExampleMarkerTracker {
-    private static readonly MODULE_URL: string = "https://syntheticmagus.github.io/webpiled-aruco-ar/v0.02/webpiled-aruco-ar/webpiled-aruco-ar.js";
+    private static readonly MODULE_URL: string = "https://syntheticmagus.github.io/prototyping/babylonar/wasm/webpiled-aruco-ar.js";
     
     private _worker: Worker;
 
