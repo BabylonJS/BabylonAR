@@ -1,10 +1,12 @@
-var gulp = require("gulp");
-var exec = require("child_process").exec;
 var browserify = require("browserify");
+var buffer = require("vinyl-buffer");
+var exec = require("child_process").exec;
+var footer = require("gulp-footer");
+var gulp = require("gulp");
+var header = require("gulp-header");
 var source = require("vinyl-source-stream");
 var tsify = require("tsify");
-var header = require("gulp-header");
-var footer = require("gulp-footer");
+var uglify = require("gulp-uglify");
 
 var playgroundProof = function (jsFile) {
     var headerCode = 
@@ -66,7 +68,7 @@ gulp.task("webpiled-aruco-ar", function () {
 gulp.task("babylonAr", gulp.series(function () {
     return browserify({
         basedir: ".",
-        debug: true,
+        debug: false,
         entries: ["src/ts/babylonAr.ts"],
         cache: {},
         packageCache: {},
@@ -75,11 +77,17 @@ gulp.task("babylonAr", gulp.series(function () {
     .plugin(tsify)
     .bundle()
     .pipe(source("babylonAr.js"))
+    .pipe(buffer())
+    .pipe(uglify())
     .pipe(gulp.dest("dist"));
 },
 function () {
     return playgroundProof("./dist/babylonAr.js");
 }));
+
+gulp.task("deploy", function () {
+    return gulp.src(["dist/**/*"]).pipe(gulp.dest("docs"));
+});
 
 gulp.task("default", gulp.parallel(
     "exampleWorker", 
