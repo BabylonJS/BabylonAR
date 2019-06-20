@@ -1,0 +1,1 @@
+export const EXAMPLE_MODULE_URL: string = "https://syntheticmagus.github.io/prototyping/babylonar/wasm/webpiled-aruco-ar.js";

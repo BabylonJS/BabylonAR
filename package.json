@@ -18,6 +18,8 @@
     "browserify": "^16.2.3",
     "browserify-shim": "^3.8.14",
     "gulp": "^4.0.0",
+    "gulp-footer": "^2.0.2",
+    "gulp-header": "^2.0.7",
     "gulp-typescript": "^5.0.1",
     "tsify": "^4.0.1",
     "typescript": "^3.5.2",

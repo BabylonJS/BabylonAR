@@ -1,13 +1,12 @@
 import { VideoTexture } from "babylonjs"
 
 import { DedicatedWorker } from "../shared/dedicatedWorker"
+import { EXAMPLE_MODULE_URL } from "../shared/constants"
 
 declare var Module: any;
 declare function postMessage(data: any): void;
 
 export class ExampleMarkerTracker {
-    private static readonly MODULE_URL: string = "https://syntheticmagus.github.io/prototyping/babylonar/wasm/webpiled-aruco-ar.js";
-    
     private _worker: Worker;
 
     private constructor() {}
@@ -82,7 +81,7 @@ export class ExampleMarkerTracker {
         return new Promise<ExampleMarkerTracker>((resolve: (tracker: ExampleMarkerTracker) => void) => {
             let tracker = new ExampleMarkerTracker();
             tracker._worker = DedicatedWorker.createFromLocation(
-                ExampleMarkerTracker.MODULE_URL,
+                EXAMPLE_MODULE_URL,
                 ExampleMarkerTracker.onInitialized,
                 ExampleMarkerTracker.onMessage);
             tracker._worker.onmessage = (event: MessageEvent) => {

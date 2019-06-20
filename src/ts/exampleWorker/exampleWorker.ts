@@ -1,10 +1,9 @@
 import { DedicatedWorker } from "../shared/dedicatedWorker"
+import { EXAMPLE_MODULE_URL } from "../shared/constants"
 
 declare function postMessage(data: any): void;
 
 export class ExampleWorker {
-    private static readonly MODULE_URL: string = "https://syntheticmagus.github.io/prototyping/babylonar/wasm/webpiled-aruco-ar.js";
-
     private _worker: Worker;
 
     private constructor() {}
@@ -25,7 +24,7 @@ export class ExampleWorker {
         return new Promise<ExampleWorker>((resolve: (worker: ExampleWorker) => void) => {
             let exampleWorker = new ExampleWorker();
             exampleWorker._worker = DedicatedWorker.createFromLocation(
-                ExampleWorker.MODULE_URL,
+                EXAMPLE_MODULE_URL,
                 ExampleWorker.onInitialized,
                 ExampleWorker.onMessage);
             exampleWorker._worker.onmessage = (event: MessageEvent) => {
