@@ -145,7 +145,7 @@ export class ExampleObjectTracker {
                 trackedObject.setTracking(
                     this.__targetPosition, 
                     this.__targetRotation, 
-                    true);
+                    false);
             }
         });
     }
