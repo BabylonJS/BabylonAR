@@ -11,6 +11,14 @@ computer vision expertise.
 to ping [syntheticmagus](https://forum.babylonjs.com/u/syntheticmagus) directly for questions about
 BabylonAR.
 
+## CDN
+
+The core offerings of BabylonAR can be accessed from here.
+
+- https://ar.babylonjs.com
+- https://ar.babylonjs.com/babylonAr.js
+- https://ar.babylonjs.com/babylonAr.playground.js
+
 ## Quick Start and Common Tasks
 
 ### Prerequisites
@@ -141,3 +149,56 @@ deploying for distribution should require only the following `gulp` command:
 ```
 gulp deploy
 ```
+
+## Dependencies
+
+BabylonAR leverages other open-source projects to make powerful computer vision capabilities
+accessible for use in Web apps. A number of dependencies, largely constituting build tools, can
+be found in [package.json](package.json). A number of other dependencies either are not listed
+there or deserve to be called out more explicitly.
+
+### [OpenCV](https://opencv.org/)
+
+OpenCV makes a tremendous number of powerful computer vision algorithms 
+freely available to the computing community. OpenCV powers a significant (and expected to grow)
+portion of the capabilities available through BabylonAR.
+
+It's worthy of note that recent versions of OpenCV provide JavaScript bindings by default, 
+allowing the library to be used in the browser without encapsulation. Those looking to use
+OpenCV's capabilities directly are encouraged to explore the 
+[relevant documentation](https://docs.opencv.org/4.1.0/d5/d10/tutorial_js_root.html). BabylonAR
+does not consume OpenCV through JavaScript bindings because BabylonAR's *goal* is encapsulation.
+BabylonAR's APIs are intended to be minimal and simple to use from inside Babylon.js Web apps,
+requiring no domain-specific (or OpenCV-specific) knowledge. For this reason, BabylonAR consumes
+OpenCV at the native level.
+
+The upshot of this is that the BabylonAR repository includes OpenCV binaries and headers which 
+are dependencies for WebAssembly builds: [opencv-4.1.0](src/cpp/aruco-meta-marker-tracker/extern/opencv-4.1.0)
+shows one such folder of dependencies. These headers and binaries were originally built using 
+Emscripten from the attributed release and are available under the provided license: for example,
+[LICENSE](C:\repos\babylon\BabylonAR\src\cpp\aruco-meta-marker-tracker\extern\opencv-4.1.0). These
+dependencies are included primarily to make the build process easier so that BabylonAR developers
+don't necessarily have to compile OpenCV for themselves. However, there's nothing custom about 
+these binaries, so developers are welcome to build their own if they are so inclined. For an
+approximate description of the process by which these dependencies were built, see
+[Marker Tracking in Babylon.js](https://medium.com/@babylonjs/marker-tracking-in-babylon-js-ce99490be1dd)
+on the Babylon.js blog.
+
+### [Emscripten](https://emscripten.org/)
+
+To bring native libraries like OpenCV to the Web, BabylonAR uses Emscripten
+to port C++ utilities to WebAssembly. The [Emscripten SDK](https://github.com/emscripten-core/emsdk)
+is included with BabylonAR as a Git submodule; commands that use it to build WASM files are 
+part of assorted `gulp` tasks.
+
+## Contributing
+
+Thanks for pitching in! To contribute to BabylonAR, simply submit a pull request to the 
+[main BabylonAR repository](https://github.com/BabylonJS/BabylonAR).
+
+## Maintainers
+
+BabylonAR is a part of the [Babylon](https://www.babylonjs.com/) family of technologies.
+With questions or for additinal information, please ping project maintainer Justin Murray 
+([@syntheticmagus](https://twitter.com/syntheticmagus)) on the 
+[Babylon.js forum](https://forum.babylonjs.com/u/syntheticmagus).
