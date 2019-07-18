@@ -11,19 +11,19 @@ export class ObjectTrackerCamera extends Camera {
         this._layer = new Layer(name + "_backgroundLayer", null, scene);
     }
 
-    public static async createAsync(name: string, scene: Scene): Promise<ObjectTrackerCamera> {
+    public static async CreateAsync(name: string, scene: Scene): Promise<ObjectTrackerCamera> {
 
         scene.clearColor.set(0, 0, 0, 1);
 
         const camera = new ObjectTrackerCamera(name, scene);
         camera.fovMode = Camera.FOVMODE_VERTICAL_FIXED;
-        camera.fov = Tools.ToRadians(40); // TODO: ??!?!?!
+        camera.fov = Tools.ToRadians(40); // TODO: Magic number
         
         const constraints = {
-            maxWidth: 640, // TODO: ??!?!?!
-            maxHeight: 480, // TODO: ??!?!?!
-            minWidth: 640, // TODO: ??!?!?!
-            minHeight: 480, // TODO: ??!?!?!
+            maxWidth: 640, // TODO: Magic number
+            maxHeight: 480, // TODO: Magic number
+            minWidth: 640, // TODO: Magic number
+            minHeight: 480, // TODO: Magic number
             deviceId: ""
         };
         const devices = await navigator.mediaDevices.enumerateDevices();

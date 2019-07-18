@@ -85,7 +85,7 @@ export class ArUcoMetaMarkerTracker {
         }
     }
 
-    public static createAsync(videoTexture: VideoTexture): Promise<ArUcoMetaMarkerTracker> {
+    public static CreateAsync(videoTexture: VideoTexture): Promise<ArUcoMetaMarkerTracker> {
         return new Promise<ArUcoMetaMarkerTracker>((resolve: (tracker: ArUcoMetaMarkerTracker) => void) => {
             let tracker = new ArUcoMetaMarkerTracker(videoTexture);
             tracker._worker = DedicatedWorker.createFromLocation(

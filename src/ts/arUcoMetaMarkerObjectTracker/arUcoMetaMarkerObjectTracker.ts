@@ -47,9 +47,9 @@ export class ArUcoMetaMarkerObjectTracker {
         this._runTrackingObserver = null;
     }
 
-    public static async createAsync(videoTexture: VideoTexture, scene: Scene, videoScale: number = 1.0): Promise<ArUcoMetaMarkerObjectTracker> {
+    public static async CreateAsync(videoTexture: VideoTexture, scene: Scene, videoScale: number = 1.0): Promise<ArUcoMetaMarkerObjectTracker> {
         let objectTracker = new ArUcoMetaMarkerObjectTracker(scene);
-        objectTracker._tracker = await ArUcoMetaMarkerTracker.createAsync(videoTexture);
+        objectTracker._tracker = await ArUcoMetaMarkerTracker.CreateAsync(videoTexture);
         await objectTracker.setCalibrationAsync(videoTexture, videoScale);
         return objectTracker;
     }

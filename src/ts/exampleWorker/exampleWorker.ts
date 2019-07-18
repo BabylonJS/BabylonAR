@@ -20,7 +20,7 @@ export class ExampleWorker {
         postMessage(data);
     }
 
-    public static createAsync(): Promise<ExampleWorker> {
+    public static CreateAsync(): Promise<ExampleWorker> {
         return new Promise<ExampleWorker>((resolve: (worker: ExampleWorker) => void) => {
             let exampleWorker = new ExampleWorker();
             exampleWorker._worker = DedicatedWorker.createFromLocation(

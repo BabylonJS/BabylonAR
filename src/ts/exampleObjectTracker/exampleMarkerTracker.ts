@@ -77,7 +77,7 @@ export class ExampleMarkerTracker {
         }
     }
 
-    public static createAsync(): Promise<ExampleMarkerTracker> {
+    public static CreateAsync(): Promise<ExampleMarkerTracker> {
         return new Promise<ExampleMarkerTracker>((resolve: (tracker: ExampleMarkerTracker) => void) => {
             let tracker = new ExampleMarkerTracker();
             tracker._worker = DedicatedWorker.createFromLocation(

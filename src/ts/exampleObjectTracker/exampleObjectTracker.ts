@@ -199,9 +199,9 @@ export class ExampleObjectTracker {
         this._runTrackingObserver = null;
     }
 
-    static createAsync(videoTexture: VideoTexture, scene: Scene) {
+    static CreateAsync(videoTexture: VideoTexture, scene: Scene) {
         var objectTracker = new ExampleObjectTracker(videoTexture, scene);
-        return ExampleMarkerTracker.createAsync().then(tracker => {
+        return ExampleMarkerTracker.CreateAsync().then(tracker => {
             objectTracker._tracker = tracker;
             return objectTracker.setCalibrationAsync();
         }).then(() => {

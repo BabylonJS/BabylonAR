@@ -123,7 +123,7 @@ var createScene = async function () {
 
     scene.clearColor = new BABYLON.Color3(1, 0, 0);
     await BABYLON.Tools.LoadScriptAsync("http://localhost:8080/babylonAr.playground.js");
-    var worker = await BabylonAR.ExampleWorker.createAsync();
+    var worker = await BabylonAR.ExampleWorker.CreateAsync();
     await worker.sendMessageAsync("Welcome to Babylon!");
     console.log("Message sent to worker and received: Welcome to Babylon!");
     scene.clearColor = new BABYLON.Color3(0, 1, 0);
