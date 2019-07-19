@@ -8,11 +8,23 @@
 
 class ArUcoTracker
 {
+    struct Impl;
+
 public:
-    struct TrackedMarker
+    struct MetaMarker
     {
-        cv::Point3f Position{};
-        cv::Matx33f Rotation{};
+        cv::Vec3d Position{ 0.0, 0.0, 0.0 };
+        cv::Vec3d Rotation{ 1.0, 0.0, 0.0 };
+        int MissedFrames{ 0xFFFF };
+
+        bool IsTracked() const
+        {
+            return MissedFrames == 0;
+        }
+
+    private:
+        friend struct ArUcoTracker::Impl;
+        bool ShouldTrack{ true };
     };
 
     ArUcoTracker();
@@ -20,9 +32,11 @@ public:
 
     void SetCalibrationFromFrameSize(size_t frameWidth, size_t frameHeight);
     void SetCalibration(size_t frameWidth, size_t frameHeight, double fx, double fy, double cx, double cy, double k1, double k2, double p1, double p2, double k3);
-    std::map<int, TrackedMarker> ProcessImage(size_t width, size_t height, void *data, float markerScale);
+
+    int AddMetaMarker(int upperLeftId, int upperRightId, int lowerLeftId, int lowerRightId, float widthInMarkers);
+
+    const std::vector<MetaMarker>& ProcessImage(size_t width, size_t height, void *data);
 
 private:
-    struct Impl;
     std::unique_ptr<Impl> m_impl{};
 };
