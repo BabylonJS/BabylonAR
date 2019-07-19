@@ -3,6 +3,19 @@
 #include <opencv2/aruco.hpp>
 #include <opencv2/opencv.hpp>
 
+namespace
+{
+    inline void addPointsAroundCenter(std::vector<cv::Point3f>& points, float x, float y, float markerSize = 1.f)
+    {
+        const float delta = 0.5f * markerSize;
+        points.reserve(4);
+        points.emplace_back(x - delta, y - delta, 0.f);
+        points.emplace_back(x + delta, y - delta, 0.f);
+        points.emplace_back(x + delta, y + delta, 0.f);
+        points.emplace_back(x - delta, y + delta, 0.f);
+    }
+}
+
 struct ArUcoTracker::Impl
 {
     Impl()
@@ -45,7 +58,35 @@ struct ArUcoTracker::Impl
         m_distortionCoefficients.at<double>(0, 7) = 0.0;
     }
 
-    std::map<int, TrackedMarker> ProcessImage(size_t width, size_t height, void *data, float markerScale)
+    int AddMetaMarker(int upperLeftId, int upperRightId, int lowerLeftId, int lowerRightId, float widthInMarkers)
+    {
+        std::vector<std::vector<cv::Point3f>> markerCorners{};
+        markerCorners.resize(4);
+        const float halfWidth = widthInMarkers / 2.f;
+        addPointsAroundCenter(markerCorners[0], -halfWidth, -halfWidth);
+        addPointsAroundCenter(markerCorners[1], -halfWidth, halfWidth);
+        addPointsAroundCenter(markerCorners[2], halfWidth, -halfWidth);
+        addPointsAroundCenter(markerCorners[3], halfWidth, halfWidth);
+
+        std::vector<int> ids{};
+        ids.reserve(4);
+        ids.push_back(upperLeftId);
+        ids.push_back(upperRightId);
+        ids.push_back(lowerLeftId);
+        ids.push_back(lowerRightId);
+
+        m_boards.push_back(cv::aruco::Board::create(markerCorners, m_markerDictionary, ids));
+        m_metaMarkers.emplace_back();
+
+        return m_metaMarkers.size() - 1;
+    }
+
+    const MetaMarker& GetMetaMarker(int id) const
+    {
+        return m_metaMarkers[id];
+    }
+
+    const std::vector<MetaMarker>& ProcessImage(size_t width, size_t height, void *data)
     {
         cv::Mat image{};
         cv::resize(cv::Mat(height, width, CV_8UC4, data), image, m_frameSize);
@@ -53,44 +94,55 @@ struct ArUcoTracker::Impl
 
         m_markerIds.clear();
         m_markerCorners.clear();
-        m_rotationVectors.clear();
-        m_translationVectors.clear();
 
         cv::aruco::detectMarkers(image, m_markerDictionary, m_markerCorners, m_markerIds);
-        cv::aruco::estimatePoseSingleMarkers(m_markerCorners, markerScale, m_cameraMatrix, m_distortionCoefficients, m_rotationVectors, m_translationVectors);
 
-        std::map<int, TrackedMarker> markers;
-
-        for (size_t idx = 0; idx < m_markerIds.size(); idx++)
+        for (size_t idx = 0; idx < m_boards.size(); ++idx)
         {
-            auto& marker = markers[m_markerIds[idx]] = {
-                cv::Point3f{ 
-                    static_cast<float>(m_translationVectors[idx][0]), 
-                    static_cast<float>(m_translationVectors[idx][1]), 
-                    static_cast<float>(m_translationVectors[idx][2]) }, 
-                cv::Matx33f{}
-            };
-            cv::Vec3f rodrigues{ 
-                static_cast<float>(m_rotationVectors[idx][0]), 
-                static_cast<float>(m_rotationVectors[idx][1]), 
-                static_cast<float>(m_rotationVectors[idx][2]) };
-            cv::Rodrigues(rodrigues, marker.Rotation);
+            const auto& board = m_boards[idx];
+            auto& marker = m_metaMarkers[idx];
+
+            // Early out for deleted meta markers.
+            if (!marker.ShouldTrack)
+            {
+                continue;
+            }
+
+            const int poseEstimationResult = cv::aruco::estimatePoseBoard(
+                m_markerCorners, 
+                m_markerIds, 
+                board, 
+                m_cameraMatrix, 
+                m_distortionCoefficients, 
+                marker.Rotation, 
+                marker.Position, 
+                marker.IsTracked());
+            
+            if (poseEstimationResult == 4 || (poseEstimationResult > 2 && marker.IsTracked()))
+            {
+                marker.MissedFrames = 0;
+            }
+            else
+            {
+                ++marker.MissedFrames;
+            }
         }
 
-        return std::move(markers);
+        return m_metaMarkers;
     }
 
 private:
     cv::Mat m_cameraMatrix{};
     cv::Mat m_distortionCoefficients{};
     cv::Size m_frameSize{};
-    cv::Ptr<cv::aruco::Dictionary> m_markerDictionary;
+    cv::Ptr<cv::aruco::Dictionary> m_markerDictionary{};
 
     // Cached vectors to try to minimize allocations.
     std::vector<int> m_markerIds{};
     std::vector<std::vector<cv::Point2f>> m_markerCorners{};
-    std::vector<cv::Vec3d> m_rotationVectors{};
-    std::vector<cv::Vec3d> m_translationVectors{};
+
+    std::vector<cv::Ptr<cv::aruco::Board>> m_boards{};
+    std::vector<MetaMarker> m_metaMarkers{};
 };
 
 ArUcoTracker::ArUcoTracker()
@@ -109,7 +161,12 @@ void ArUcoTracker::SetCalibration(size_t frameWidth, size_t frameHeight, double 
     m_impl->SetCalibration(frameWidth, frameHeight, fx, fy, cx, cy, k1, k2, p1, p2, k3);
 }
 
-std::map<int, ArUcoTracker::TrackedMarker> ArUcoTracker::ProcessImage(size_t width, size_t height, void *data, float markerScale)
+int ArUcoTracker::AddMetaMarker(int upperLeftId, int upperRightId, int lowerLeftId, int lowerRightId, float widthInMarkers)
 {
-    return std::move(m_impl->ProcessImage(width, height, data, markerScale));
+    return m_impl->AddMetaMarker(upperLeftId, upperRightId, lowerLeftId, lowerRightId, widthInMarkers);
+}
+
+const std::vector<ArUcoTracker::MetaMarker>& ArUcoTracker::ProcessImage(size_t width, size_t height, void *data)
+{
+    return m_impl->ProcessImage(width, height, data);
 }
