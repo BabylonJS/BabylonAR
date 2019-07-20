@@ -34,7 +34,7 @@ export class ArUcoMetaMarkerObjectTracker {
                     for (let id in this._trackedNodes) {
                         const marker = this._tracker.markers[id];
                         const node = this._trackedNodes[id];
-                        node.setTracking(marker.position, marker.rotation, marker.confidence > 0.9);
+                        node.setTracking(marker.position, marker.rotation, marker.confidence > 0.98);
                     }
                     running = false;
                 });

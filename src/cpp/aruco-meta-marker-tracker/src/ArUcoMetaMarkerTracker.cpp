@@ -4,6 +4,70 @@
 
 #include <opencv2/opencv.hpp>
 
+namespace
+{
+    struct FilteredPose
+    {
+        cv::Point3d Position{ 0, 0, 0 };
+        Quaternion Rotation{ 0, 0, 0, 1 };
+        double Confidence = 0;
+
+        void Update(const ArUcoTracker::MetaMarker& marker)
+        {
+            Confidence = 0.5 * Confidence + 0.5 * std::pow(0.5, marker.MissedFrames);
+            if (Confidence < 0.9)
+            {
+                return;
+            }
+            double deltaT = marker.MissedFrames + 1;
+
+            const cv::Vec3d& position = marker.Position;
+            cv::Vec3d rotation = marker.Rotation;
+
+            Position.x = position[0];
+            Position.y = -position[1]; // Handedness
+            Position.z = position[2];
+            m_positionFilter.Update(Position, deltaT);
+
+            cv::Matx33d matrix{};
+            cv::Rodrigues(rotation, matrix);
+
+            cv::Vec3d right{
+                matrix(0, 0),
+                matrix(1, 0),
+                matrix(2, 0)
+            };
+            m_rightFilter.Update(right, deltaT);
+            right /= right.dot(right);
+
+            cv::Vec3d forward{
+                matrix(0, 2),
+                matrix(1, 2),
+                matrix(2, 2)
+            };
+            m_forwardFilter.Update(forward, deltaT);
+            forward /= forward.dot(forward);
+
+            cv::Vec3d up = forward.cross(right);
+            forward = right.cross(up);
+            
+            matrix = {
+                right[0], up[0], forward[0],
+                right[1], up[1], forward[1],
+                right[2], up[2], forward[2]
+            };
+
+            cv::Rodrigues(matrix, rotation);
+            Rotation = { rotation };
+        }
+
+    private:
+        NaiveFilter<cv::Point3d> m_positionFilter{ { 0, 0, 0 }, 10 };
+        NaiveFilter<cv::Vec3d> m_rightFilter{ { 1, 0, 0 }, 2 };
+        NaiveFilter<cv::Vec3d> m_forwardFilter{ { 0, 0, 1 }, 2 };
+    };
+}
+
 extern "C"
 {
     // Boilerplate
@@ -23,6 +87,7 @@ extern "C"
 
 // Global calibration solver variable
 std::unique_ptr<ArUcoTracker> arucoTracker{};
+std::vector<FilteredPose> poses{};
 
 void initialize()
 {
@@ -64,6 +129,7 @@ void set_calibration(int frameWidth, int frameHeight, float fx, float fy, float 
 
 int add_marker(int ulId, int urId, int llId, int lrId, float widthInMarkers)
 {
+    poses.emplace_back();
     return arucoTracker->AddMetaMarker(ulId, urId, llId, lrId, widthInMarkers);
 }
 
@@ -74,18 +140,19 @@ void process_image(int width, int height, void* data)
     for (size_t idx = 0; idx < markers.size(); ++idx)
     {
         const auto& marker = markers[idx];
+        auto& pose = poses[idx];
 
-        Quaternion q{ marker.Rotation };
-        float confidence = std::powf(0.5f, marker.MissedFrames);
+        pose.Update(marker);
+        
         update_marker_tracking(
             idx,
-            confidence,
-            marker.Position[0],
-            -1.f * marker.Position[1], // Handedness
-            marker.Position[2],
-            q.x,
-            q.y,
-            q.z,
-            q.w);
+            static_cast<float>(pose.Confidence),
+            static_cast<float>(pose.Position.x),
+            static_cast<float>(pose.Position.y),
+            static_cast<float>(pose.Position.z),
+            static_cast<float>(pose.Rotation.x),
+            static_cast<float>(pose.Rotation.y),
+            static_cast<float>(pose.Rotation.z),
+            static_cast<float>(pose.Rotation.w));
     }
 }

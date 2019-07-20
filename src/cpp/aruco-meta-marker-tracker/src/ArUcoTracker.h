@@ -14,8 +14,13 @@ public:
     struct MetaMarker
     {
         cv::Vec3d Position{ 0.0, 0.0, 0.0 };
-        cv::Vec3d Rotation{ 1.0, 0.0, 0.0 };
+        cv::Vec3d Rotation{};
         int MissedFrames{ 0xFFFF };
+
+        MetaMarker()
+        {
+            cv::Rodrigues(cv::Matx33d::eye(), Rotation);
+        }
 
         bool IsTracked() const
         {
