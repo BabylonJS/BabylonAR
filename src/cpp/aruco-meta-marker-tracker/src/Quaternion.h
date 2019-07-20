@@ -25,10 +25,12 @@ struct Quaternion
 
         double theta = std::sqrt(rodrigues.dot(rodrigues));
         cv::Point3d axis{ -rodrigues.x, rodrigues.y, -rodrigues.z };
-        assert(theta > 0.0001);
-        axis /= theta;
-        axis *= std::sin(theta / 2.0);
+        if (theta > 0.0001)
+        {
+            axis /= theta;
+        }
 
+        axis *= std::sin(theta / 2.0);
         w = std::cos(theta / 2.0);
         x = axis.x;
         y = axis.y;

@@ -5,26 +5,28 @@ template<typename PointT>
 class NaiveFilter
 {
 public:
-    NaiveFilter(float lambda)
-        : m_lambda{ lambda }
+    NaiveFilter(PointT initialEstimate, double lambda)
+        : m_lastEstimate{ initialEstimate }
+        , m_lambda{ lambda }
     {}
 
-    void Update(PointT& measurement)
+    void Update(PointT& measurement, double deltaT)
     {
         auto measurementDelta = measurement - m_lastEstimate;
-        float measurementError = measurementDelta.dot(measurementDelta);
+        double measurementError = measurementDelta.dot(measurementDelta);
 
-        float gain = m_lastEstimateError / (m_lastEstimateError + measurementError);
+        double gain = (m_lastEstimateError + EPSILON) / (m_lastEstimateError + measurementError + EPSILON);
 
         m_lastEstimate += gain * measurementDelta;
-        m_lastEstimateError = std::max((1.f - gain) * m_lastEstimateError, m_lambda * measurementError);
+        m_lastEstimateError = std::max((1.f - gain) * m_lastEstimateError, m_lambda * deltaT * measurementError);
 
         measurement = m_lastEstimate;
     }
 
 private:
-    const float m_lambda{};
+    static constexpr double EPSILON = 0.00001; // To prevent gain from becoming NaN.
+    const double m_lambda{};
 
     PointT m_lastEstimate{};
-    float m_lastEstimateError{ 10.f };
+    double m_lastEstimateError{ 10.f };
 };
