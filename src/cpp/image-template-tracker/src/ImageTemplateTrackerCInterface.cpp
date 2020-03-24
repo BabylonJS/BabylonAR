@@ -1,4 +1,4 @@
-#include <ImagePatchTracker.h>
+#include "ImageTemplateTracker.h"
 
 #include <memory>
 
@@ -12,28 +12,28 @@ extern "C"
     extern void update_template_position(int x, int y);
 }
 
-std::unique_ptr<ImagePatchTracker> imagePatchTracker{};
+std::unique_ptr<ImageTemplateTracker> imageTemplateTracker{};
 
 void initialize(int width, int height, void* data, int template_center_x, int template_center_y)
 {
     cv::Mat image{ height, width, CV_8UC4, data };
-    imagePatchTracker = std::make_unique<ImagePatchTracker>(
+    imageTemplateTracker = std::make_unique<ImageTemplateTracker>(
         image, 
         cv::Point2i{ template_center_x, template_center_y },
-        ImagePatchTracker::Settings{});
+        ImageTemplateTracker::Settings{});
 }
 
 void uninitialize()
 {
-    imagePatchTracker.reset();
+    imageTemplateTracker.reset();
 }
 
 void track_template_in_image(int width, int height, void* data)
 {
     cv::Mat image{ height, width, CV_8UC4, data };
-    if(imagePatchTracker->TrackPatchInImage(image))
+    if(imageTemplateTracker->TrackTemplateInImage(image))
     {
-        auto pt = imagePatchTracker->GetPatchPosition();
+        auto pt = imageTemplateTracker->GetTemplatePosition();
         update_template_position(pt.x, pt.y);
     }
 }
