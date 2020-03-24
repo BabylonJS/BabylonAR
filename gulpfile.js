@@ -75,6 +75,15 @@ gulp.task("aruco-meta-marker-tracker", function () {
     return run(shellCommand).exec();
 });
 
+gulp.task("image-template-tracker", function () {
+    var shellCommand =
+        "cd src/cpp/image-template-tracker; " +
+        "./build.sh ../../../" + EMSCRIPTEN_COMPILER_LOCATION + "; " +
+        "cd ../../../; " +
+        "cp src/cpp/image-template-tracker/build/* dist/wasm/";
+    return run(shellCommand).exec();
+});
+
 // ================ JAVASCRIPT BUILD SCRIPTS ================
 
 gulp.task("exampleWorker", function () {
