@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>OpenCV Photo Example</title>
+        <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+        <script src="../babylonAr.js"></script>
+        <style>
+            html, body, canvas {
+                width: 100%;
+                height: 100%;
+                margin:0;
+                padding:0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="renderCanvas"></canvas>
+        <script>
+            window.addEventListener("DOMContentLoaded", function () {
+                var canvas = document.getElementById('renderCanvas');
+                var engine = new BABYLON.Engine(canvas, true);
+    
+                var createScene = async function () {
+                    var scene = new BABYLON.Scene(engine);
+                    scene.clearColor = BABYLON.Color3.Black();
+
+                    var camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(0, 0, -1), scene);
+                    camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+
+                    var interactionDisabled = true;
+                    var setInteractionDisabled = (disabled) => {};
+                    
+                    // Set up plane.
+                    var plane = BABYLON.MeshBuilder.CreatePlane("plane", {}, scene);
+                    plane.scaling.y = -1;
+                    var planeMaterial = new BABYLON.PBRMaterial("planeMaterial", scene);
+                    planeMaterial.unlit = true;
+                    plane.material = planeMaterial;
+
+                    // Add video texture.
+                    var setPlaneTexture = async function () {
+                        const constraints = {
+                            maxWidth: 640, // Magic number
+                            maxHeight: 480, // Magic number
+                            minWidth: 640, // Magic number
+                            minHeight: 480, // Magic number
+                            deviceId: ""
+                        };
+                        const devices = await navigator.mediaDevices.enumerateDevices();
+                        devices.forEach(device => {
+                            if (device.kind === "videoinput") {
+                                constraints.deviceId = device.deviceId;
+                            }
+                        });
+
+                        var texture = await BABYLON.VideoTexture.CreateFromWebCamAsync(null, constraints);
+                        
+                        plane.material.albedoTexture = texture;
+                        plane.scaling.x = texture.getSize().width / texture.getSize().height;
+                    };
+                    setPlaneTexture();
+
+                    // Resize logic.
+                    var ratio = 1;
+                    var scale = 1;
+                    scene.onBeforeRenderObservable.add(() => {
+                        ratio = canvas.width / canvas.height;
+                        camera.orthoBottom = -scale / 2;
+                        camera.orthoTop = scale / 2;
+                        camera.orthoLeft = -scale * ratio / 2;
+                        camera.orthoRight = scale * ratio / 2;
+                    });
+
+                    return scene;
+                }
+
+                createScene().then(function (scene) {
+                    engine.runRenderLoop(function(){
+                        scene.render();
+                    });
+                    window.addEventListener('resize', function(){
+                        engine.resize();
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>
