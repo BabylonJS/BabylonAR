@@ -6,16 +6,18 @@ import { IMAGE_TEMPLATE_TRACKER_URL } from "../shared/constants"
 declare var Module: any;
 declare function postMessage(data: any): void;
 
-export class ImageTemplateTracker extends Observable<Nullable<Vector2>> {
+export class ImageTemplateTracker {
     private _worker: Worker;
 
     private _tracking: boolean;
     private _trackingLoop: Promise<void>;
     private _videoTexture: VideoTexture;
 
+    public onTrackingUpdatedObservable: Observable<Nullable<Vector2>>;
+
     private constructor(videoTexture: VideoTexture) {
-        super();
         this._videoTexture = videoTexture;
+        this.onTrackingUpdatedObservable = new Observable<Nullable<Vector2>>();
     }
 
     private static onInitialized() {
@@ -99,9 +101,9 @@ export class ImageTemplateTracker extends Observable<Nullable<Vector2>> {
                 var loopFunction = (data: { tracked: boolean, x: number, y: number }) => {
                     if (data.tracked) {
                         trackedPosition.set(data.x, data.y);
-                        this.notifyObservers(trackedPosition);
+                        this.onTrackingUpdatedObservable.notifyObservers(trackedPosition);
                     } else {
-                        this.notifyObservers(null);
+                        this.onTrackingUpdatedObservable.notifyObservers(null);
                     }
 
                     if (this._tracking) {

@@ -82,7 +82,7 @@
                     // Create the template tracker
                     var tracker = await BabylonAR.ImageTemplateTracker.CreateAsync(texture);
                     var texSize;
-                    tracker.add((point) => {
+                    tracker.onTrackingUpdatedObservable.add((point) => {
                         if (point === null) {
                             indicator.setEnabled(false);
                         } else {
