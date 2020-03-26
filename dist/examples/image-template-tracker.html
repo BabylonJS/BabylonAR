@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>OpenCV Photo Example</title>
+        <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+        <script src="../babylonAr.js"></script>
+        <style>
+            html, body, canvas {
+                width: 100%;
+                height: 100%;
+                margin:0;
+                padding:0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="renderCanvas"></canvas>
+        <script>
+            window.addEventListener("DOMContentLoaded", function () {
+                var canvas = document.getElementById('renderCanvas');
+                var engine = new BABYLON.Engine(canvas, true);
+    
+                var createScene = async function () {
+                    var scene = new BABYLON.Scene(engine);
+                    scene.clearColor = BABYLON.Color3.Black();
+
+                    var camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(0, 0, -1), scene);
+                    camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+                    camera.minZ = 0.1;
+
+                    var interactionDisabled = true;
+                    var setInteractionDisabled = (disabled) => {};
+                    
+                    // Set up plane.
+                    var plane = BABYLON.MeshBuilder.CreatePlane("plane", {}, scene);
+                    plane.scaling.y = -1;
+                    var planeMaterial = new BABYLON.PBRMaterial("planeMaterial", scene);
+                    planeMaterial.unlit = true;
+                    plane.material = planeMaterial;
+
+                    // Add video texture.
+                    const constraints = {
+                        maxWidth: 640, // Magic number
+                        maxHeight: 480, // Magic number
+                        minWidth: 640, // Magic number
+                        minHeight: 480, // Magic number
+                        deviceId: ""
+                    };
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    devices.forEach(device => {
+                        if (device.kind === "videoinput") {
+                            constraints.deviceId = device.deviceId;
+                        }
+                    });
+                    var texture = await BABYLON.VideoTexture.CreateFromWebCamAsync(null, constraints);
+                    plane.material.albedoTexture = texture;
+                    plane.scaling.x = texture.getSize().width / texture.getSize().height;
+
+                    // Resize logic.
+                    var ratio = 1;
+                    var scale = 1;
+                    scene.onBeforeRenderObservable.add(() => {
+                        ratio = canvas.width / canvas.height;
+                        camera.orthoBottom = -scale / 2;
+                        camera.orthoTop = scale / 2;
+                        camera.orthoLeft = -scale * ratio / 2;
+                        camera.orthoRight = scale * ratio / 2;
+                    });
+
+                    // Create the tracking indicator
+                    var indicator = BABYLON.MeshBuilder.CreatePlane("indicator", {}, scene);
+                    indicator.position.z = -0.1;
+                    indicator.scaling.x = 0.1;
+                    indicator.scaling.y = 0.1;
+                    var indicatorMaterial = new BABYLON.PBRMaterial("indicatorMaterial", scene);
+                    indicatorMaterial.unlit = true;
+                    indicatorMaterial.albedoColor = BABYLON.Color3.Red();
+                    indicator.material = indicatorMaterial;
+                    indicator.setEnabled(false);
+
+                    // Create the template tracker
+                    var tracker = await BabylonAR.ImageTemplateTracker.CreateAsync(texture);
+                    var texSize;
+                    tracker.onTrackingUpdatedObservable.add((point) => {
+                        if (point === null) {
+                            indicator.setEnabled(false);
+                        } else {
+                            indicator.setEnabled(true);
+
+                            indicator.position.x = point.x;
+                            indicator.position.y = point.y;
+
+                            texSize = plane.material.albedoTexture.getSize();
+                            indicator.position.x -= (texSize.width / 2);
+                            indicator.position.y -= (texSize.height / 2);
+
+                            indicator.position.x /= texSize.height;
+                            indicator.position.y /= -texSize.height;
+                        }
+                    });
+                    
+                    // Run template tracking
+                    var norm = BABYLON.Vector2.Zero();
+                    var prtX;
+                    var ptrY;
+                    var tracking = false;
+                    var trackingPromise = Promise.resolve();
+                    scene.onPointerDown = () => {
+                        norm.x = 2 * scene.pointerX / canvas.width - 1;
+                        norm.y = 2 * scene.pointerY / canvas.height - 1;
+
+                        ratio = canvas.width / canvas.height;
+                        ptrX = camera.position.x + ratio * norm.x * scale / 2;
+                        ptrY = camera.position.y - norm.y * scale / 2;
+
+                        texSize = plane.material.albedoTexture.getSize();
+                        ptrX *= texSize.height;
+                        ptrY *= -texSize.height;
+
+                        ptrX += (texSize.width / 2);
+                        ptrY += (texSize.height / 2);
+
+                        if (tracking) {
+                            trackingPromise = trackingPromise.then(() => tracker.stopTrackingAsync());
+                        }
+
+                        trackingPromise.then(() => {
+                            tracker.startTracking(ptrX, ptrY);
+                            tracking = true;
+                        });
+                    }
+
+                    return scene;
+                }
+
+                createScene().then(function (scene) {
+                    engine.runRenderLoop(function(){
+                        scene.render();
+                    });
+                    window.addEventListener('resize', function(){
+                        engine.resize();
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,6 @@
+Built from OpenCV 3.2.0 sources using Emscripten.  The following is the output of the command, "emcc --version".
+
+emcc (Emscripten gcc/clang-like replacement) 1.38.24 (commit 5a8f59737dd246d97b4ebae4084b3b34c8120b29)
+Copyright (C) 2014 the Emscripten authors (see AUTHORS.txt)
+This is free and open source software under the MIT license.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
