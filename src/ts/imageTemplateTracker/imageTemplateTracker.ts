@@ -52,16 +52,16 @@ export class ImageTemplateTracker extends Observable<Nullable<Vector2>> {
 
             // Register the callback handler.
             let tracked: boolean = false;
-            let trackedX: Number = -1;
-            let trackedY: Number = -1;
-            Module._update_template_position = (x: Number, y: Number) => {
+            let trackedX: number = -1;
+            let trackedY: number = -1;
+            Module._update_template_position = (x: number, y: number) => {
                 tracked = true;
                 trackedX = x;
                 trackedY = y;
             }
 
             // Process the image.
-            Module._process_image(args.width, args.height, buf);
+            Module._track_template_in_image(args.width, args.height, buf);
 
             // Clean up.
             Module._update_template_position = () => {};
@@ -90,14 +90,15 @@ export class ImageTemplateTracker extends Observable<Nullable<Vector2>> {
         });
     }
 
-    public startTracking(x: Number, y: Number): void {
+    public startTracking(x: number, y: number): void {
         this._tracking = true;
         this._trackingLoop = new Promise<void>((resolve: () => void) => {
             this._worker.onmessage = () => {
                 var trackedPosition: Vector2 = Vector2.Zero();
-                this._worker.onmessage = (result) => {
-                    if (result.data.tracked) {
-                        trackedPosition.set(result.data.x, result.data.y);
+
+                var loopFunction = (data: { tracked: boolean, x: number, y: number }) => {
+                    if (data.tracked) {
+                        trackedPosition.set(data.x, data.y);
                         this.notifyObservers(trackedPosition);
                     } else {
                         this.notifyObservers(null);
@@ -121,6 +122,11 @@ export class ImageTemplateTracker extends Observable<Nullable<Vector2>> {
                         });
                     }
                 };
+
+                this._worker.onmessage = (result) => {
+                    loopFunction(result.data);
+                };
+                loopFunction({ tracked: false, x: -1, y: -1 });
             };
 
             this._worker.postMessage({
