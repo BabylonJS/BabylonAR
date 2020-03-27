@@ -3,7 +3,7 @@
     <head>
         <title>OpenCV Photo Example</title>
         <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
-        <script src="../babylonAr.js"></script>
+        <script src="http://ar.babylonjs.com/babylonAr.js"></script>
         <style>
             html, body, canvas {
                 width: 100%;
@@ -44,15 +44,8 @@
                         maxWidth: 640, // Magic number
                         maxHeight: 480, // Magic number
                         minWidth: 640, // Magic number
-                        minHeight: 480, // Magic number
-                        deviceId: ""
+                        minHeight: 480 // Magic number
                     };
-                    const devices = await navigator.mediaDevices.enumerateDevices();
-                    devices.forEach(device => {
-                        if (device.kind === "videoinput") {
-                            constraints.deviceId = device.deviceId;
-                        }
-                    });
                     var texture = await BABYLON.VideoTexture.CreateFromWebCamAsync(null, constraints);
                     plane.material.albedoTexture = texture;
                     plane.scaling.x = texture.getSize().width / texture.getSize().height;
@@ -75,28 +68,39 @@
                     indicator.scaling.y = 0.1;
                     var indicatorMaterial = new BABYLON.PBRMaterial("indicatorMaterial", scene);
                     indicatorMaterial.unlit = true;
-                    indicatorMaterial.albedoColor = BABYLON.Color3.Red();
+                    indicatorMaterial.transparencyMode = 3;
+                    var indicatorTexture = new BABYLON.Texture("./image-template-tracker-resources/texture.png", scene, true, false);
+                    indicatorTexture.onLoadObservable.add(() => {
+                        indicatorTexture.vScale = -1;
+                        indicatorMaterial.albedoTexture = indicatorTexture;
+                        
+                        indicator.position.x = 1.1 * indicator.scaling.x;
+                        indicator.scaling.x *= 2;
+                    });
                     indicator.material = indicatorMaterial;
-                    indicator.setEnabled(false);
+
+                    var indicatorParent = new BABYLON.TransformNode("indicatorParent", scene);
+                    indicator.parent = indicatorParent;
+                    indicatorParent.setEnabled(false);
 
                     // Create the template tracker
                     var tracker = await BabylonAR.ImageTemplateTracker.CreateAsync(texture);
                     var texSize;
                     tracker.onTrackingUpdatedObservable.add((point) => {
                         if (point === null) {
-                            indicator.setEnabled(false);
+                            indicatorParent.setEnabled(false);
                         } else {
-                            indicator.setEnabled(true);
+                            indicatorParent.setEnabled(true);
 
-                            indicator.position.x = point.x;
-                            indicator.position.y = point.y;
+                            indicatorParent.position.x = point.x;
+                            indicatorParent.position.y = point.y;
 
                             texSize = plane.material.albedoTexture.getSize();
-                            indicator.position.x -= (texSize.width / 2);
-                            indicator.position.y -= (texSize.height / 2);
+                            indicatorParent.position.x -= (texSize.width / 2);
+                            indicatorParent.position.y -= (texSize.height / 2);
 
-                            indicator.position.x /= texSize.height;
-                            indicator.position.y /= -texSize.height;
+                            indicatorParent.position.x /= texSize.height;
+                            indicatorParent.position.y /= -texSize.height;
                         }
                     });
                     
