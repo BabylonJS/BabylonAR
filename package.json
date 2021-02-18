@@ -14,7 +14,7 @@
   "author": "syntheticmagus",
   "license": "MIT",
   "devDependencies": {
-    "babylonjs": "^4.0.3",
+    "babylonjs": "^4.2.0",
     "browserify": "^16.2.3",
     "browserify-shim": "^3.8.14",
     "cors": "^2.8.5",

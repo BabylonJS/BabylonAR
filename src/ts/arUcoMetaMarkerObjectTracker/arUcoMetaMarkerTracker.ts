@@ -150,7 +150,7 @@ export class ArUcoMetaMarkerTracker {
         return promise;
     }
 
-    public updateAsync(): Promise<void> {
+    public async updateAsync(): Promise<void> {
         const promise = new Promise<void>((resolve, reject) => {
             this._worker.onmessage = (result) => {
                 this._worker.onmessage = DedicatedWorker.unexpectedMessageHandler;
@@ -176,9 +176,9 @@ export class ArUcoMetaMarkerTracker {
             track: true,
             width: this._videoTexture.getSize().width,
             height: this._videoTexture.getSize().height,
-            imageData: this._videoTexture.readPixels()
+            imageData: await this._videoTexture.readPixels()
         });
 
-        return promise;
+        await promise;
     }
 }

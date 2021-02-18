@@ -114,7 +114,7 @@ export class ExampleMarkerTracker {
         return promise;
     }
 
-    public findMarkersInImageAsync(videoTexture: VideoTexture): Promise<any[]> {
+    public async findMarkersInImageAsync(videoTexture: VideoTexture): Promise<any[]> {
         const promise = new Promise<any[]>((resolve, reject) => {
             this._worker.onmessage = (result) => {
                 this._worker.onmessage = DedicatedWorker.unexpectedMessageHandler;
@@ -132,9 +132,9 @@ export class ExampleMarkerTracker {
             track: true,
             width: videoTexture.getSize().width,
             height: videoTexture.getSize().height,
-            imageData: videoTexture.readPixels()
+            imageData: await videoTexture.readPixels()
         });
 
-        return promise;
+        return await promise;
     }
 }

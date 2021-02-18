@@ -94,11 +94,11 @@ export class ImageTemplateTracker {
 
     public startTracking(x: number, y: number): void {
         this._tracking = true;
-        this._trackingLoop = new Promise<void>((resolve: () => void) => {
+        this._trackingLoop = new Promise<void>(async (resolve: () => void) => {
             this._worker.onmessage = () => {
                 var trackedPosition: Vector2 = Vector2.Zero();
 
-                var loopFunction = (data: { tracked: boolean, x: number, y: number }) => {
+                var loopFunction = async (data: { tracked: boolean, x: number, y: number }) => {
                     if (data.tracked) {
                         trackedPosition.set(data.x, data.y);
                         this.onTrackingUpdatedObservable.notifyObservers(trackedPosition);
@@ -111,7 +111,7 @@ export class ImageTemplateTracker {
                             track: true,
                             width: this._videoTexture.getSize().width,
                             height: this._videoTexture.getSize().height,
-                            imageData: this._videoTexture.readPixels()
+                            imageData: await this._videoTexture.readPixels()
                         });
                     } else {
                         this._worker.onmessage = () => {
@@ -137,7 +137,7 @@ export class ImageTemplateTracker {
                 y: y,
                 width: this._videoTexture.getSize().width,
                 height: this._videoTexture.getSize().height,
-                imageData: this._videoTexture.readPixels()
+                imageData: await this._videoTexture.readPixels()
             });
         });
     }
